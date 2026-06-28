@@ -40,10 +40,10 @@ ActiveCanvas Lab
   seed      : 42
   budget    : 40
 
-  initial accuracy : 0.653
-  final accuracy   : 0.880
-  peak accuracy    : 0.880
-  AUC              : 0.812
+  initial accuracy : 0.680
+  final accuracy   : 0.680
+  peak accuracy    : 0.680
+  AUC              : 0.645
   labels used      : 50
   rounds           : 9
 ```
