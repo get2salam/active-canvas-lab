@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install package (editable, no extra deps)
+        run: pip install -e .
+
+      - name: Run tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Smoke test CLI — uncertainty on islands
+        run: |
+          python -m active_canvas_lab \
+            --dataset islands --strategy uncertainty \
+            --budget 40 --seed 42 \
+            --report /tmp/report_uncertainty.html
+          test -f /tmp/report_uncertainty.html
+
+      - name: Smoke test CLI — diversity on blobs
+        run: |
+          python -m active_canvas_lab \
+            --dataset blobs --strategy diversity \
+            --budget 30 --seed 7 \
+            --report /tmp/report_diversity.html
+          test -f /tmp/report_diversity.html
+
+      - name: Verify reports are non-empty HTML
+        run: |
+          python - <<'EOF'
+          for path in ("/tmp/report_uncertainty.html", "/tmp/report_diversity.html"):
+              with open(path) as f:
+                  content = f.read()
+              assert "<!DOCTYPE html>" in content, f"missing doctype: {path}"
+              assert "<svg" in content, f"missing SVG: {path}"
+              assert len(content) > 5000, f"suspiciously small: {path}"
+          print("All reports OK")
+          EOF

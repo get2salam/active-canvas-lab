@@ -33,7 +33,6 @@ htmlcov/
 .mypy_cache/
 .ruff_cache/
 
-out/
-!out/.gitkeep
+out/*.html
+out/*.svg
 *.html
-!examples/*.html
