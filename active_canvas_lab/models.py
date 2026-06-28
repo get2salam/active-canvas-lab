@@ -4,6 +4,7 @@ No external libraries — arithmetic uses only Python built-ins and math.
 The numerically stable sigmoid avoids overflow for large |z|.
 """
 import math
+from typing import List
 
 
 class LogisticRegression:
@@ -13,7 +14,7 @@ class LogisticRegression:
         self.lr = lr
         self.n_epochs = n_epochs
         self.l2 = l2
-        self.w: list[float] = []
+        self.w: List[float] = []
         self.b: float = 0.0
         self._fitted = False
 
@@ -49,13 +50,13 @@ class LogisticRegression:
         self._fitted = True
         return self
 
-    def predict_proba(self, X: list) -> list[float]:
+    def predict_proba(self, X: list) -> List[float]:
         """Return P(y=1) for each sample."""
         if not self._fitted:
             return [0.5] * len(X)
         return [self._sigmoid(self._dot(self.w, xi) + self.b) for xi in X]
 
-    def predict(self, X: list) -> list[int]:
+    def predict(self, X: list) -> List[int]:
         return [1 if p >= 0.5 else 0 for p in self.predict_proba(X)]
 
     def score(self, X: list, y: list) -> float:
