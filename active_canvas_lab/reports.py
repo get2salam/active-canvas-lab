@@ -3,8 +3,14 @@
 All SVG is generated with pure string arithmetic — no plotting libraries.
 The output is a single .html file that renders offline in any browser.
 """
+import html as _html_mod
 import os
 from typing import Optional
+
+
+def _h(s: object) -> str:
+    """Escape HTML special characters before embedding in report output."""
+    return _html_mod.escape(str(s))
 
 # ── colour palette ────────────────────────────────────────────────────────────
 _C0      = "#4e79a7"   # class 0 (blue)
@@ -194,13 +200,13 @@ def generate_html(result: dict) -> str:
         return f"{v:.4f}" if isinstance(v, float) else str(v)
 
     rows = "".join(
-        f"<tr><td>{k.replace('_', ' ')}</td><td class='val'>{fmt(v)}</td></tr>"
+        f"<tr><td>{_h(k.replace('_', ' '))}</td><td class='val'>{_h(fmt(v))}</td></tr>"
         for k, v in stats.items()
     )
     table = f"<table><tr><th>metric</th><th>value</th></tr>{rows}</table>"
 
     tags = "".join(
-        f"<span class='tag'><b>{k}</b>: {v}</span>"
+        f"<span class='tag'><b>{k}</b>: {_h(v)}</span>"
         for k, v in [
             ("dataset",  dataset),
             ("strategy", strategy),
@@ -214,7 +220,7 @@ def generate_html(result: dict) -> str:
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>ActiveCanvas Lab — {dataset} × {strategy}</title>
+  <title>ActiveCanvas Lab — {_h(dataset)} × {_h(strategy)}</title>
   <style>{_CSS}</style>
 </head>
 <body>
