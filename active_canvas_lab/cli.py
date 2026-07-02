@@ -63,8 +63,30 @@ def build_parser() -> argparse.ArgumentParser:
     return p
 
 
+def _validate_args(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
+    """Reject numeric combinations that argparse's type=int lets through but
+    that silently degrade into meaningless or misleading runs (e.g. a negative
+    budget reports a "successful" experiment that never queried anything).
+    """
+    if args.n_samples < 1:
+        parser.error(f"--n-samples must be >= 1 (got {args.n_samples})")
+    if args.seed_size < 1:
+        parser.error(f"--seed-size must be >= 1 (got {args.seed_size})")
+    if args.seed_size >= args.n_samples:
+        parser.error(
+            f"--seed-size ({args.seed_size}) must be smaller than "
+            f"--n-samples ({args.n_samples})"
+        )
+    if args.batch < 1:
+        parser.error(f"--batch must be >= 1 (got {args.batch})")
+    if args.budget < 0:
+        parser.error(f"--budget must be >= 0 (got {args.budget})")
+
+
 def main(argv: Optional[List[str]] = None) -> int:
-    args = build_parser().parse_args(argv)
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    _validate_args(parser, args)
 
     result = run_experiment(
         dataset=args.dataset,

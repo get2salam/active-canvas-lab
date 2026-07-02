@@ -77,3 +77,53 @@ class TestCLI(unittest.TestCase):
             ])
             self.assertEqual(code, 0)
             self.assertTrue(os.path.exists(path))
+
+
+class TestCLIArgumentValidation(unittest.TestCase):
+    """A negative/zero numeric argument must be rejected at the CLI boundary
+    rather than silently producing a degenerate or misleading result (see
+    _validate_args in cli.py).
+    """
+
+    def test_negative_budget_exits(self):
+        with self.assertRaises(SystemExit):
+            main(["--dataset", "blobs", "--n-samples", "60", "--budget", "-5"])
+
+    def test_zero_n_samples_exits(self):
+        with self.assertRaises(SystemExit):
+            main(["--dataset", "blobs", "--n-samples", "0"])
+
+    def test_negative_n_samples_exits(self):
+        with self.assertRaises(SystemExit):
+            main(["--dataset", "blobs", "--n-samples", "-10"])
+
+    def test_zero_seed_size_exits(self):
+        with self.assertRaises(SystemExit):
+            main(["--dataset", "blobs", "--n-samples", "60", "--seed-size", "0"])
+
+    def test_negative_seed_size_exits(self):
+        with self.assertRaises(SystemExit):
+            main(["--dataset", "blobs", "--n-samples", "60", "--seed-size", "-100"])
+
+    def test_seed_size_ge_n_samples_exits(self):
+        with self.assertRaises(SystemExit):
+            main(["--dataset", "blobs", "--n-samples", "60", "--seed-size", "60"])
+
+    def test_zero_batch_exits(self):
+        with self.assertRaises(SystemExit):
+            main(["--dataset", "blobs", "--n-samples", "60", "--batch", "0"])
+
+    def test_negative_batch_exits(self):
+        with self.assertRaises(SystemExit):
+            main(["--dataset", "blobs", "--n-samples", "60", "--batch", "-1"])
+
+    def test_zero_budget_is_allowed(self):
+        code = main(["--dataset", "blobs", "--n-samples", "60", "--budget", "0"])
+        self.assertEqual(code, 0)
+
+    def test_seed_size_just_below_n_samples_is_allowed(self):
+        code = main([
+            "--dataset", "blobs", "--n-samples", "60",
+            "--seed-size", "59", "--budget", "5",
+        ])
+        self.assertEqual(code, 0)
