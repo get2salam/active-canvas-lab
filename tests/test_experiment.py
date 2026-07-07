@@ -80,3 +80,35 @@ class TestActiveExperiment(unittest.TestCase):
         r2 = run_experiment(dataset="blobs", strategy="uncertainty",
                             budget=20, seed=7, n_samples=100)
         self.assertEqual(r1["history"], r2["history"])
+
+    def test_seed_size_ge_train_size_raises_with_positive_budget(self):
+        # n_samples=10 with the default 0.25 test_ratio reserves 2 samples
+        # for testing, leaving only 8 for train/pool. seed_size=9 satisfies
+        # the CLI's "seed_size < n_samples" check yet still swallows the
+        # entire train set, leaving nothing to query.
+        with self.assertRaises(ValueError):
+            run_experiment(
+                dataset="blobs", strategy="uncertainty",
+                budget=40, seed=42, n_samples=10, seed_size=9,
+            )
+
+    def test_seed_size_ge_train_size_allowed_with_zero_budget(self):
+        # A zero budget means no querying was ever going to happen, so an
+        # empty pool is not misleading and should not be rejected.
+        result = run_experiment(
+            dataset="blobs", strategy="uncertainty",
+            budget=0, seed=42, n_samples=10, seed_size=9,
+        )
+        self.assertGreater(len(result["history"]), 0)
+
+    def test_active_learning_experiment_raises_on_empty_pool(self):
+        X, y = load_dataset("blobs", n_samples=10, seed=0)
+        X_train, y_train = X[:8], y[:8]
+        X_test, y_test = X[8:], y[8:]
+        with self.assertRaises(ValueError):
+            ActiveLearningExperiment(
+                X_train, y_train, X_test, y_test,
+                model=LogisticRegression(),
+                strategy=get_strategy("uncertainty"),
+                seed_size=8, batch_size=4, budget=10, seed=0,
+            )

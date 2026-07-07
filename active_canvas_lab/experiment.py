@@ -35,6 +35,15 @@ class ActiveLearningExperiment:
         budget: int = 50,
         seed: int = 0,
     ):
+        if budget > 0 and seed_size >= len(X_train):
+            raise ValueError(
+                f"seed_size ({seed_size}) leaves no samples in the pool for "
+                f"a training set of size {len(X_train)}, so the requested "
+                f"budget ({budget}) can never be spent. This can happen "
+                f"even when seed_size < n_samples, because the test split "
+                f"is carved out of n_samples before the train/pool split. "
+                f"Reduce --seed-size or increase --n-samples."
+            )
         rng = random.Random(seed)
         idx = list(range(len(X_train)))
         rng.shuffle(idx)

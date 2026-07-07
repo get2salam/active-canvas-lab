@@ -121,9 +121,24 @@ class TestCLIArgumentValidation(unittest.TestCase):
         code = main(["--dataset", "blobs", "--n-samples", "60", "--budget", "0"])
         self.assertEqual(code, 0)
 
-    def test_seed_size_just_below_n_samples_is_allowed(self):
+    def test_seed_size_just_below_train_size_is_allowed(self):
+        # n_samples=60 with the default 0.25 test split reserves 15 samples
+        # for testing, leaving a 45-sample train set. seed_size=44 is the
+        # largest value that still leaves one sample in the pool.
         code = main([
             "--dataset", "blobs", "--n-samples", "60",
-            "--seed-size", "59", "--budget", "5",
+            "--seed-size", "44", "--budget", "5",
         ])
         self.assertEqual(code, 0)
+
+    def test_seed_size_below_n_samples_but_ge_train_size_exits(self):
+        # --seed-size 59 satisfies the "seed_size < n_samples" check on its
+        # own, but the 0.25 test split shrinks the actual train set to 45
+        # samples, so the seed set would swallow the whole pool and the
+        # requested budget could never be spent. This must fail loudly
+        # instead of silently reporting a zero-round "success".
+        with self.assertRaises(SystemExit):
+            main([
+                "--dataset", "blobs", "--n-samples", "60",
+                "--seed-size", "59", "--budget", "5",
+            ])

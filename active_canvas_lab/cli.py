@@ -88,15 +88,18 @@ def main(argv: Optional[List[str]] = None) -> int:
     args = parser.parse_args(argv)
     _validate_args(parser, args)
 
-    result = run_experiment(
-        dataset=args.dataset,
-        strategy=args.strategy,
-        budget=args.budget,
-        seed=args.seed,
-        n_samples=args.n_samples,
-        seed_size=args.seed_size,
-        batch_size=args.batch,
-    )
+    try:
+        result = run_experiment(
+            dataset=args.dataset,
+            strategy=args.strategy,
+            budget=args.budget,
+            seed=args.seed,
+            n_samples=args.n_samples,
+            seed_size=args.seed_size,
+            batch_size=args.batch,
+        )
+    except ValueError as exc:
+        parser.error(str(exc))
 
     stats = summarise(result["history"])
 
